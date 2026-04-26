@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+chromadb[auth]==0.5.3
+sqlalchemy[asyncio]
+asyncpg
+pydantic-settings
+httpx
+python-multipart
+pypdf
+python-docx
+openpyxl
+pandas
+redis[asyncio]
+aiofiles
+numpy<2.0.0
+# local embeddings - no api key needed, downloads model on first run
+sentence-transformers

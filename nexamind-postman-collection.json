@@ -1,0 +1,1066 @@
+{
+  "info": {
+    "name": "NexaMind AI Platform",
+    "description": "Complete API collection for testing NexaMind AI Platform - Graduation Project\n\nSetup:\n1. Import this collection\n2. Set TENANT_ID and TOKEN variables after registering\n3. Run requests in order",
+    "_postman_id": "nexamind-2024",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_ORCHESTRATOR",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "BASE_AUTH",
+      "value": "http://localhost:8001",
+      "type": "string"
+    },
+    {
+      "key": "BASE_LLM",
+      "value": "http://localhost:8002",
+      "type": "string"
+    },
+    {
+      "key": "BASE_RAG",
+      "value": "http://localhost:8003",
+      "type": "string"
+    },
+    {
+      "key": "TENANT_ID",
+      "value": "PASTE_YOUR_TENANT_ID_HERE",
+      "type": "string"
+    },
+    {
+      "key": "TOKEN",
+      "value": "PASTE_YOUR_ACCESS_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health Checks",
+      "item": [
+        {
+          "name": "Health - Orchestrator",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_ORCHESTRATOR}}/health",
+            "description": "Check if the main agent orchestrator is running"
+          }
+        },
+        {
+          "name": "Health - Auth Service",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_AUTH}}/health",
+            "description": "Check if auth service is running"
+          }
+        },
+        {
+          "name": "Health - LLM Gateway",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_LLM}}/api/v1/health",
+            "description": "Check if LLM gateway (Groq) is running"
+          }
+        },
+        {
+          "name": "Health - RAG Service",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_RAG}}/health",
+            "description": "Check if RAG service with local embeddings is running"
+          }
+        },
+        {
+          "name": "List Available LLM Models",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_LLM}}/api/v1/models",
+            "description": "See what Groq models are available"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Authentication",
+      "item": [
+        {
+          "name": "Register New Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.tenant && json.tenant.id) {",
+                  "    pm.collectionVariables.set('TENANT_ID', json.tenant.id);",
+                  "    pm.collectionVariables.set('TOKEN', json.access_token);",
+                  "    console.log('TENANT_ID saved:', json.tenant.id);",
+                  "    console.log('TOKEN saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_AUTH}}/api/v1/auth/register",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Company\",\n  \"slug\": \"testco\",\n  \"admin_email\": \"admin@testco.com\",\n  \"admin_password\": \"Admin1234!\",\n  \"admin_full_name\": \"Test Admin\"\n}"
+            },
+            "description": "Creates a new tenant + admin user. TENANT_ID and TOKEN are saved automatically to collection variables."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('TOKEN', json.access_token);",
+                  "    console.log('TOKEN updated');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_AUTH}}/api/v1/auth/login",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@testco.com\",\n  \"password\": \"Admin1234!\"\n}"
+            },
+            "description": "Login and get JWT token. Token is saved automatically."
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_AUTH}}/api/v1/auth/me",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "description": "Get info about the currently logged in user"
+          }
+        },
+        {
+          "name": "Generate API Key",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_AUTH}}/api/v1/auth/api-key",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Test API Key\",\n  \"scopes\": [\"read\", \"write\"]\n}"
+            },
+            "description": "Generate an API key. The full key is only shown once in the response - save it!"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_AUTH}}/api/v1/auth/refresh",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"PASTE_REFRESH_TOKEN_HERE\"\n}"
+            },
+            "description": "Get a new access token using refresh token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - LLM Gateway (Groq)",
+      "item": [
+        {
+          "name": "Chat Completion - Llama3 70B",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_LLM}}/api/v1/chat/completions",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"llama3-70b-8192\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"What is machine learning in 2 sentences?\"}\n  ],\n  \"max_tokens\": 200,\n  \"temperature\": 0.7\n}"
+            },
+            "description": "Direct call to Groq Llama3 70B model"
+          }
+        },
+        {
+          "name": "Chat Completion - Llama3 8B (faster)",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_LLM}}/api/v1/chat/completions",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"llama3-8b-8192\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Say hello in 5 different languages\"}\n  ],\n  \"max_tokens\": 200,\n  \"temperature\": 0.5\n}"
+            },
+            "description": "Faster, smaller Groq model"
+          }
+        },
+        {
+          "name": "Chat with System Prompt",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_LLM}}/api/v1/chat/completions",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"default\",\n  \"system\": \"You are a helpful financial analyst. Always give specific numbers.\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"What are typical profit margins in SaaS businesses?\"}\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.3\n}"
+            },
+            "description": "Using model=default picks the configured default (llama3-70b)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - RAG Service",
+      "item": [
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_RAG}}/api/v1/documents/upload",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select a .txt, .pdf, .docx, or .csv file from your computer"
+                },
+                {
+                  "key": "collection",
+                  "value": "general",
+                  "type": "text"
+                }
+              ]
+            },
+            "description": "Upload a document to the knowledge base. Select a file from your computer in the body tab."
+          }
+        },
+        {
+          "name": "Search Knowledge Base",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_RAG}}/api/v1/search",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"expense approval policy\",\n  \"collection\": \"general\",\n  \"n_results\": 5,\n  \"use_hybrid\": true\n}"
+            },
+            "description": "Semantic search in the knowledge base. Returns results with similarity scores."
+          }
+        },
+        {
+          "name": "Search Finance Collection",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_RAG}}/api/v1/search",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"budget forecasting methodology\",\n  \"collection\": \"finance\",\n  \"n_results\": 3\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Chat (Auto Routing)",
+      "item": [
+        {
+          "name": "Chat - Finance Question",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what are our biggest expense categories and where can we save money?\"\n}"
+            },
+            "description": "Auto-routes to advisor_agent (finance module). Check the 'agent' field in response."
+          }
+        },
+        {
+          "name": "Chat - Forecast Revenue",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"forecast our revenue and cash flow for next quarter\"\n}"
+            },
+            "description": "Auto-routes to forecaster_agent"
+          }
+        },
+        {
+          "name": "Chat - Detect Fraud",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"are there any suspicious or anomalous transactions in our financial data?\"\n}"
+            },
+            "description": "Auto-routes to detector_agent"
+          }
+        },
+        {
+          "name": "Chat - Employee Attrition",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which employees are at risk of leaving or quitting?\"\n}"
+            },
+            "description": "Auto-routes to retention_guard_agent"
+          }
+        },
+        {
+          "name": "Chat - Hire Engineer",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"help me recruit a senior software engineer, what should I look for?\"\n}"
+            },
+            "description": "Auto-routes to talent_scout_agent"
+          }
+        },
+        {
+          "name": "Chat - Employee Development",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"create a career development plan for our engineering team\"\n}"
+            },
+            "description": "Auto-routes to growth_coach_agent"
+          }
+        },
+        {
+          "name": "Chat - Inventory Reorder",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which inventory items need to be reordered?\"\n}"
+            },
+            "description": "Auto-routes to demand_planner_agent"
+          }
+        },
+        {
+          "name": "Chat - Supplier Performance",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"rank our suppliers by performance and reliability\"\n}"
+            },
+            "description": "Auto-routes to supply_optimizer_agent"
+          }
+        },
+        {
+          "name": "Chat - Sales Pipeline",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"forecast our sales revenue for next quarter based on current pipeline\"\n}"
+            },
+            "description": "Auto-routes to revenue_forecaster_agent"
+          }
+        },
+        {
+          "name": "Chat - Customer Churn",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which customers are likely to churn and what should we do?\"\n}"
+            },
+            "description": "Auto-routes to churn_guardian_agent"
+          }
+        },
+        {
+          "name": "Chat - Support Tickets",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"analyze our open support tickets and suggest how to resolve them\"\n}"
+            },
+            "description": "Auto-routes to ticket_resolver_agent"
+          }
+        },
+        {
+          "name": "Chat - Customer Sentiment",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what is the overall customer sentiment and satisfaction?\"\n}"
+            },
+            "description": "Auto-routes to sentiment_analyst_agent"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Force Specific Agent",
+      "item": [
+        {
+          "name": "Force - Forecaster Agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"analyze the numbers\",\n  \"agent\": \"forecaster_agent\"\n}"
+            },
+            "description": "Force a specific agent regardless of message content"
+          }
+        },
+        {
+          "name": "Force - Detector Agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"check everything\",\n  \"agent\": \"detector_agent\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Force - Retention Guard",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"full analysis please\",\n  \"agent\": \"retention_guard_agent\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Force - Churn Guardian",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"full analysis please\",\n  \"agent\": \"churn_guardian_agent\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Force - Knowledge Curator",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/chat",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what knowledge articles are we missing?\",\n  \"agent\": \"knowledge_curator_agent\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Direct Agent Invoke",
+      "item": [
+        {
+          "name": "Invoke - forecaster_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/forecaster_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"give me a 90 day revenue forecast\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - detector_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/detector_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"find suspicious transactions in the last 30 days\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - advisor_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/advisor_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"recommend ways to optimize our budget\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - reporter_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/reporter_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"generate a financial summary report for this quarter\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - talent_scout_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/talent_scout_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what should we look for when hiring a data scientist?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - retention_guard_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/retention_guard_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"who is most likely to quit in the next 90 days?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - growth_coach_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/growth_coach_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"create a development plan for junior developers\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - culture_builder_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/culture_builder_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what is the employee engagement situation by department?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - demand_planner_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/demand_planner_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which products need reordering and what quantities?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - supply_optimizer_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/supply_optimizer_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"rank our suppliers and tell me who to drop\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - logistics_coordinator_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/logistics_coordinator_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"how can we optimize our delivery routes and reduce shipping costs?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - quality_guardian_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/quality_guardian_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what products have the highest defect rates?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - revenue_forecaster_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/revenue_forecaster_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what is our expected revenue for next quarter from the current pipeline?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - churn_guardian_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/churn_guardian_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which customers are about to churn and how much revenue is at risk?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - deal_strategist_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/deal_strategist_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which deals should we prioritize to close this month?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - sales_coach_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/sales_coach_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"who are the top and bottom performing sales reps this quarter?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - ticket_resolver_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/ticket_resolver_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"summarize our open tickets and suggest resolutions for the high priority ones\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - sentiment_analyst_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/sentiment_analyst_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which customers have the most negative sentiment right now?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - knowledge_curator_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/knowledge_curator_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"what knowledge base articles are missing based on recent tickets?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invoke - quality_analyst_agent",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/quality_analyst_agent/invoke",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"which support agents need coaching based on quality scores?\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Module Endpoints",
+      "item": [
+        {
+          "name": "Finance - Forecast",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/finance/forecast",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"forecast cash flow for next 3 months\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Finance - Anomalies",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/finance/anomalies",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"find anomalies and possible fraud\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Finance - Budget Recommendations",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/finance/budget",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"where should we cut costs?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "HR - Attrition Risk",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/hr/attrition",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"who might leave?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "HR - Talent Recruitment",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/hr/recruit",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"tips for hiring senior developers\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sales - Revenue Forecast",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/sales/forecast",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"forecast sales revenue for next quarter\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sales - Churn Risk",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/sales/churn",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"identify at-risk customers\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Operations - Demand",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/operations/demand",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"what is the demand forecast for our top products?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Support - Analyze Ticket",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/support/ticket",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"analyze and prioritize open tickets\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Agent Management",
+      "item": [
+        {
+          "name": "List All 20 Agents",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents",
+            "description": "Returns all 20 agents with their module assignments"
+          }
+        },
+        {
+          "name": "Agent Status - forecaster",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/forecaster_agent/status",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ]
+          }
+        },
+        {
+          "name": "Agent Status - detector",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_ORCHESTRATOR}}/api/v1/agents/detector_agent/status",
+            "header": [
+              { "key": "X-Tenant-Id", "value": "{{TENANT_ID}}" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

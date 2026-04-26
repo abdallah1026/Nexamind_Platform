@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+groq
+openai
+anthropic
+redis[asyncio]
+pydantic-settings
+httpx
+tiktoken

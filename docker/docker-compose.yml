@@ -1,0 +1,179 @@
+
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: postgres
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - nexamind-network
+
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    container_name: nexamind-redis
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexamind-network
+
+  chromadb:
+    build:
+      context: ./chromadb
+      dockerfile: Dockerfile
+    container_name: nexamind-chromadb
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8010:8000"
+    environment:
+      CHROMA_SERVER_AUTH_CREDENTIALS: ${CHROMA_AUTH_TOKEN:-nexamind-chroma-token}
+      CHROMA_SERVER_AUTH_PROVIDER: "chromadb.auth.token.TokenAuthServerProvider"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexamind-network
+
+  auth-service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    container_name: nexamind-auth
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nexamind}:${POSTGRES_PASSWORD:-nexamind_secret}@postgres:5432/${POSTGRES_DB:-nexamind}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexamind-network
+
+  llm-gateway:
+    build:
+      context: ../services/llm-gateway
+      dockerfile: Dockerfile
+    container_name: nexamind-llm-gateway
+    env_file: ../.env
+    environment:
+      REDIS_URL: redis://redis:6379/1
+    ports:
+      - "8002:8002"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexamind-network
+
+  rag-service:
+    build:
+      context: ../services/rag-service
+      dockerfile: Dockerfile
+    container_name: nexamind-rag
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nexamind}:${POSTGRES_PASSWORD:-nexamind_secret}@postgres:5432/${POSTGRES_DB:-nexamind}
+      REDIS_URL: redis://redis:6379/2
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      LLM_GATEWAY_URL: http://llm-gateway:8002
+    ports:
+      - "8003:8003"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexamind-network
+
+  agent-orchestrator:
+    build:
+      context: ../services/agent-orchestrator
+      dockerfile: Dockerfile
+    container_name: nexamind-orchestrator
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nexamind}:${POSTGRES_PASSWORD:-nexamind_secret}@postgres:5432/${POSTGRES_DB:-nexamind}
+      REDIS_URL: redis://redis:6379/3
+      AUTH_SERVICE_URL: http://auth-service:8001
+      LLM_GATEWAY_URL: http://llm-gateway:8002
+      RAG_SERVICE_URL: http://rag-service:8003
+    ports:
+      - "8000:8000"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      llm-gateway:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexamind-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  chroma_data:
+  uploads_data:
+
+networks:
+  nexamind-network:
+    driver: bridge

@@ -1,0 +1,472 @@
+openapi: 3.1.0
+info:
+  title: NexaMind AI Platform API
+  description: |
+    Multi-agent AI platform for enterprise business operations.
+    
+    ## Authentication
+    All API calls require either:
+    - **Bearer JWT**: `Authorization: Bearer <token>` — obtained via `/auth/login`
+    - **API Key**: `X-API-Key: nx_<key>` — generated via `/auth/api-key`
+    
+    ## Tenant Isolation
+    All requests must include `X-Tenant-Id` header for data isolation.
+    
+    ## Available Agents
+    | Module | Agent | Specialty |
+    |--------|-------|-----------|
+    | Finance | forecaster_agent | Cash flow & revenue forecasting |
+    | Finance | detector_agent | Anomaly & fraud detection |
+    | Finance | advisor_agent | Budget optimization |
+    | Finance | reporter_agent | Financial narratives |
+    | HR | talent_scout_agent | Candidate screening |
+    | HR | retention_guard_agent | Attrition prediction |
+    | HR | growth_coach_agent | Career development |
+    | HR | culture_builder_agent | Engagement insights |
+    | Operations | demand_planner_agent | Demand forecasting |
+    | Operations | supply_optimizer_agent | Procurement optimization |
+    | Operations | logistics_coordinator_agent | Route optimization |
+    | Operations | quality_guardian_agent | Quality monitoring |
+    | Sales | revenue_forecaster_agent | Revenue predictions |
+    | Sales | churn_guardian_agent | Churn prevention |
+    | Sales | deal_strategist_agent | Deal coaching |
+    | Sales | sales_coach_agent | Rep performance |
+    | Support | ticket_resolver_agent | Ticket triage |
+    | Support | sentiment_analyst_agent | Sentiment analysis |
+    | Support | knowledge_curator_agent | KB management |
+    | Support | quality_analyst_agent | Quality monitoring |
+  version: 1.0.0
+  contact:
+    name: NexaMind Support
+    email: support@nexamind.ai
+
+servers:
+  - url: http://localhost:8000
+    description: Orchestrator (local)
+  - url: http://localhost:8001
+    description: Auth Service (local)
+  - url: http://localhost:8002
+    description: LLM Gateway (local)
+  - url: http://localhost:8003
+    description: RAG Service (local)
+
+tags:
+  - name: Authentication
+    description: User registration, login, and API key management
+  - name: Chat
+    description: Multi-agent chat interface
+  - name: Finance
+    description: Financial intelligence agents
+  - name: HR
+    description: Human resources agents
+  - name: Operations
+    description: Operations management agents
+  - name: Sales
+    description: Sales intelligence agents
+  - name: Support
+    description: Customer support agents
+  - name: LLM Gateway
+    description: Direct LLM access
+  - name: RAG
+    description: Document management and search
+
+paths:
+  /api/v1/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new tenant
+      description: Creates a new tenant with an admin user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug, admin_email, admin_password, admin_full_name]
+              properties:
+                name:
+                  type: string
+                  example: "Acme Corporation"
+                slug:
+                  type: string
+                  pattern: '^[a-z0-9-]+$'
+                  example: "acme-corp"
+                admin_email:
+                  type: string
+                  format: email
+                  example: "admin@acme.com"
+                admin_password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                admin_full_name:
+                  type: string
+                  example: "John Smith"
+      responses:
+        '201':
+          description: Tenant registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant:
+                    $ref: '#/components/schemas/Tenant'
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+        '409':
+          description: Tenant slug already exists
+
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+
+  /api/v1/auth/api-key:
+    post:
+      tags: [Authentication]
+      summary: Generate API key
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: "Production Integration"
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["read", "write"]
+                expires_in_days:
+                  type: integer
+                  nullable: true
+                  example: 365
+      responses:
+        '200':
+          description: API key created (full key only shown once)
+
+  /api/v1/chat:
+    post:
+      tags: [Chat]
+      summary: Multi-agent chat
+      description: |
+        Automatically routes your message to the most appropriate agent based on content analysis.
+        You can optionally force a specific agent or module.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              finance_query:
+                summary: Finance query
+                value:
+                  message: "What are our biggest cost reduction opportunities this quarter?"
+              hr_query:
+                summary: HR query  
+                value:
+                  message: "Which employees are most likely to leave in the next 90 days?"
+              sales_query:
+                summary: Sales query
+                value:
+                  message: "Forecast our revenue for Q4 based on current pipeline"
+              force_agent:
+                summary: Force specific agent
+                value:
+                  message: "Analyze support ticket quality for the team"
+                  agent: "quality_analyst_agent"
+      responses:
+        '200':
+          description: Agent response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+
+  /api/v1/finance/{endpoint}:
+    post:
+      tags: [Finance]
+      summary: Finance module endpoints
+      description: |
+        Available endpoints:
+        - `forecast` → forecaster_agent
+        - `anomalies` → detector_agent  
+        - `budget/recommendations` → advisor_agent
+        - `reports` → reporter_agent
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: endpoint
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [forecast, anomalies, budget/recommendations, reports]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleRequest'
+      responses:
+        '200':
+          description: Agent response
+
+  /api/v1/agents:
+    get:
+      tags: [Chat]
+      summary: List all agents
+      responses:
+        '200':
+          description: List of available agents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        module:
+                          type: string
+                  count:
+                    type: integer
+
+  /api/v1/chat/completions:
+    post:
+      tags: [LLM Gateway]
+      servers:
+        - url: http://localhost:8002
+      summary: LLM completion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
+      responses:
+        '200':
+          description: Completion response
+
+  /api/v1/documents/upload:
+    post:
+      tags: [RAG]
+      servers:
+        - url: http://localhost:8003
+      summary: Upload document to knowledge base
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                collection:
+                  type: string
+                  default: default
+      responses:
+        '200':
+          description: Document indexed
+
+  /api/v1/search:
+    post:
+      tags: [RAG]
+      servers:
+        - url: http://localhost:8003
+      summary: Semantic search
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                collection:
+                  type: string
+                  default: default
+                n_results:
+                  type: integer
+                  default: 5
+      responses:
+        '200':
+          description: Search results
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Tenant UUID for data isolation
+
+  schemas:
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        plan:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+        expires_in:
+          type: integer
+          example: 3600
+
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: Natural language query
+        session_id:
+          type: string
+          nullable: true
+          description: Session ID for conversation continuity
+        context:
+          type: object
+          nullable: true
+          description: Additional context for the agent
+        agent:
+          type: string
+          nullable: true
+          description: Force specific agent (optional)
+        module:
+          type: string
+          nullable: true
+          enum: [finance, hr, operations, sales, support]
+          description: Force specific module (optional)
+
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        agent:
+          type: string
+        module:
+          type: string
+        session_id:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+
+    ModuleRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+        context:
+          type: object
+          nullable: true
+        params:
+          type: object
+          nullable: true
+
+    CompletionRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model:
+          type: string
+          example: default
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant, system]
+              content:
+                type: string
+        max_tokens:
+          type: integer
+          default: 1000
+        temperature:
+          type: number
+          default: 0.7
+        system:
+          type: string
+          nullable: true
