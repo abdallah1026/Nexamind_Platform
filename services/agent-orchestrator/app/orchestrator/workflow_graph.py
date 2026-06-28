@@ -15,20 +15,20 @@ class WorkflowGraph:
     
     PREDEFINED_WORKFLOWS = {
         "financial_health_check": [
-            "reporter_agent",    # Get current state
-            "detector_agent",    # Check for anomalies  
-            "forecaster_agent",  # Generate outlook
-            "advisor_agent",     # Provide recommendations
+            "reporter_agent",    
+            "detector_agent",    
+            "forecaster_agent",  
+            "advisor_agent",     
         ],
         "employee_retention_review": [
-            "retention_guard_agent",  # Identify at-risk
-            "growth_coach_agent",     # Development gaps
-            "culture_builder_agent",  # Engagement issues
+            "retention_guard_agent",  
+            "growth_coach_agent",     
+            "culture_builder_agent",  
         ],
         "sales_pipeline_review": [
-            "revenue_forecaster_agent",  # Pipeline analysis
-            "churn_guardian_agent",      # At-risk customers
-            "deal_strategist_agent",     # Deal coaching
+            "revenue_forecaster_agent",  
+            "churn_guardian_agent",      
+            "deal_strategist_agent",     
         ],
     }
 

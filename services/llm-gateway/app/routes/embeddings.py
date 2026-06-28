@@ -1,14 +1,10 @@
-# embeddings route
-# NOTE: if using groq, embeddings are NOT handled here
-# the rag service handles embeddings locally using sentence-transformers
-# this route is only useful if you switch to openai provider
+
 
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
 from ..providers.base import EmbeddingRequest, EmbeddingResponse
 
 router = APIRouter(prefix="/api/v1", tags=["Embeddings"])
-
 
 @router.post("/embeddings", response_model=EmbeddingResponse)
 async def create_embeddings(
@@ -17,8 +13,7 @@ async def create_embeddings(
     x_provider: Optional[str] = Header(None)
 ):
     from ..main import get_provider, settings, cost_tracker
-    
-    # groq doesnt support embeddings
+
     provider_name = x_provider or settings.DEFAULT_PROVIDER
     if provider_name == "groq":
         raise HTTPException(

@@ -1,0 +1,10 @@
+# NexaMind Enterprise Policies
+
+## Vacation and Paid Time Off (PTO)
+Employees at NexaMind are entitled to 25 days of paid time off (PTO) per calendar year. Vacation requests must be submitted through the internal HR portal at least 2 weeks in advance of the planned absence. A maximum of 5 unused PTO days can be rolled over to the next calendar year.
+
+## Remote Work Policy
+NexaMind supports a hybrid work environment. Employees are expected to work from the corporate office at least 3 days per week (Tuesday through Thursday). Mondays and Fridays are optional remote work days, subject to manager approval and team alignment.
+
+## Expense Reimbursement
+All business expenses exceeding $50 must be pre-approved by the department head. Receipts must be uploaded to the Finance Portal within 30 days of the transaction. Reimbursements are processed on the 15th and 30th of each month.

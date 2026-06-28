@@ -1,19 +1,12 @@
-# base class for all agents
-# all 20 agents inherit from this
-# 
-# main things this handles:
-# - calling the LLM gateway
-# - using tools (sql, rag, etc)
-# - error handling
+
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 import httpx
 import json
 
-
 class BaseAgent(ABC):
-    # subclasses must set these
+    
     name: str = ""
     module: str = ""
     description: str = ""
@@ -34,8 +27,7 @@ class BaseAgent(ABC):
         self.db = db_session
         self.redis = redis_client
         self.config = config or {}
-        
-        # cache tool instances so we dont create them multiple times
+
         self._tools = {}
 
     def get_tool(self, tool_name: str):
@@ -44,8 +36,7 @@ class BaseAgent(ABC):
             return self._tools[tool_name]
         
         from ..tools.registry import get_tool
-        
-        # different tools need different params
+
         kwargs = {"tenant_id": self.tenant_id}
         
         if tool_name == "sql_tool":
@@ -118,7 +109,7 @@ class BaseAgent(ABC):
             return result
             
         except httpx.TimeoutException:
-            # LLM took too long
+            
             return {
                 "agent": self.name,
                 "module": self.module,
@@ -126,8 +117,8 @@ class BaseAgent(ABC):
                 "response": "Sorry the request timed out. Please try again."
             }
         except Exception as e:
-            # generic error
-            print(f"error in agent {self.name}: {e}")  # TODO: use proper logging
+            
+            print(f"error in agent {self.name}: {e}")  
             return {
                 "agent": self.name,
                 "module": self.module,

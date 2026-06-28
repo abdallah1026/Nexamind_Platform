@@ -1,12 +1,7 @@
-# retention guard agent
-# predicts which employees might leave and suggests what to do
-# 
-# i read a few papers on attrition prediction for the background section
-# of my thesis, main factors are: compensation, manager quality, career growth
+
 
 from typing import Any, Dict
 from ..base_agent import BaseAgent
-
 
 class RetentionGuardAgent(BaseAgent):
     name = "retention_guard_agent"
@@ -35,9 +30,7 @@ Keep it practical, not just generic HR advice."""
 
     async def process(self, user_input: str, context: Dict = None) -> Dict[str, Any]:
         sql = self.get_tool("sql_tool")
-        
-        # get employees with their risk scores
-        # joining with attrition_risks table if data exists
+
         result = await sql.execute(
             """SELECT 
                 e.full_name, 
@@ -57,8 +50,7 @@ Keep it practical, not just generic HR advice."""
             LIMIT 20""",
             {"tenant_id": self.tenant_id}
         )
-        
-        # also check recent engagement surveys
+
         surveys = await sql.execute(
             """SELECT 
                 e.department,

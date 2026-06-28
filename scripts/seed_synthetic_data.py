@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 Seed synthetic data for NexaMind AI Platform
 Usage: python seed_synthetic_data.py --tenant-id <uuid> --db-url <url>
@@ -25,8 +25,7 @@ COUNTERPARTIES = ["Acme Corp", "TechVision Ltd", "GlobalSys Inc", "DataPro LLC",
 
 async def seed_data(conn, tenant_id: str):
     print(f"Seeding data for tenant: {tenant_id}")
-    
-    # ---- Financial Transactions ----
+
     print("  Seeding financial transactions...")
     txns = []
     base_date = date.today() - timedelta(days=365)
@@ -48,7 +47,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(txns)} transactions")
 
-    # ---- Employees ----
     print("  Seeding employees...")
     employees = []
     for i in range(50):
@@ -73,7 +71,6 @@ async def seed_data(conn, tenant_id: str):
     emp_ids = [e[0] for e in employees]
     print(f"  ✓ {len(employees)} employees")
 
-    # ---- Attrition Risks ----
     print("  Seeding attrition risks...")
     risks = []
     for emp_id in random.sample(emp_ids, min(15, len(emp_ids))):
@@ -88,7 +85,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(risks)} attrition risk records")
 
-    # ---- Inventory Items ----
     print("  Seeding inventory...")
     skus = []
     for i in range(30):
@@ -108,7 +104,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(skus)} inventory items")
 
-    # ---- Suppliers ----
     print("  Seeding suppliers...")
     suppliers = []
     for i, name in enumerate(["Alpha Supplies", "Beta Components", "Gamma Tech", "Delta Materials", "Epsilon Systems"]):
@@ -126,7 +121,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(suppliers)} suppliers")
 
-    # ---- Sales Deals ----
     print("  Seeding sales pipeline...")
     stages = ["Prospecting", "Qualification", "Demo", "Proposal", "Negotiation", "Closed Won", "Closed Lost"]
     reps = ["Alice Smith", "Bob Johnson", "Carol Davis", "David Wilson", "Emma Brown"]
@@ -152,7 +146,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(deals)} deals")
 
-    # ---- Customer Churn Risks ----
     print("  Seeding churn risks...")
     churn_risks = []
     customers = [f"Customer {i}" for i in range(1, 16)]
@@ -172,7 +165,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(churn_risks)} churn risk records")
 
-    # ---- Support Tickets ----
     print("  Seeding support tickets...")
     priorities = ["P1", "P2", "P3", "P4"]
     statuses = ["open", "in_progress", "resolved", "closed"]
@@ -198,7 +190,6 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(tickets)} support tickets")
 
-    # ---- Engagement Surveys ----
     print("  Seeding engagement surveys...")
     surveys = []
     for emp_id in random.sample(emp_ids, min(30, len(emp_ids))):
@@ -214,7 +205,7 @@ async def seed_data(conn, tenant_id: str):
     )
     print(f"  ✓ {len(surveys)} engagement surveys")
 
-    print("\n✅ Synthetic data seeding complete!")
+    print("\n Synthetic data seeding complete!")
 
 async def main():
     parser = argparse.ArgumentParser(description="Seed NexaMind with synthetic data")

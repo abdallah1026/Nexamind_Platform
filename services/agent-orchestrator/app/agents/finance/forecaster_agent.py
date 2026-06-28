@@ -1,10 +1,7 @@
-# forecaster agent - handles all the financial forecasting stuff
-# written by me (graduation project 2024)
-# TODO: add more forecasting methods later maybe ARIMA?
+
 
 from typing import Any, Dict, List
 from ..base_agent import BaseAgent
-
 
 class ForecasterAgent(BaseAgent):
     name = "forecaster_agent"
@@ -13,7 +10,7 @@ class ForecasterAgent(BaseAgent):
     tools = ["sql_tool", "calculation_tool", "rag_tool", "api_tool"]
 
     def get_system_prompt(self) -> str:
-        # i spent like 3 days writing this prompt lol
+        
         return """You are a financial forecasting assistant.
 Your job is to look at financial data and predict future values.
 
@@ -26,11 +23,9 @@ what you should do:
 always give numbers not just vague answers. include best case and worst case."""
 
     async def process(self, user_input: str, context: Dict = None) -> Dict[str, Any]:
-        
-        # first get data from db
+
         sql = self.get_tool("sql_tool")
-        
-        # TODO: maybe filter by category too? will think about this
+
         recent_data = await sql.execute(
             """SELECT 
                 DATE_TRUNC('month', transaction_date) as month,
@@ -44,13 +39,9 @@ always give numbers not just vague answers. include best case and worst case."""
             ORDER BY month""",
             {"tenant_id": self.tenant_id}
         )
-        
-        # also search the knowledge base for any relevant stuff
+
         kb_results = await self.search_knowledge(user_input, collection="finance")
-        
-        # debug print - remove before final submission
-        # print(f"got {recent_data.get('count')} months of data")
-        
+
         messages = [{"role": "user", "content": f"""
 the user asked: {user_input}
 

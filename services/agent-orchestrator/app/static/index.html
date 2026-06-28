@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexaMind AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css?v=3">
+</head>
+<body class="dark-mode">
+    <!-- Auth Gateway Screen -->
+    <div id="auth-gateway" class="auth-wrapper">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <div class="logo-animation">
+                    <div class="logo-spark"></div>
+                    <svg class="brain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                        <path d="M12 6v12M8 10h8M9 14h6"/>
+                    </svg>
+                </div>
+                <h1>NexaMind</h1>
+                <p class="subtitle">Multi-Agent AI Platform for Enterprise Operations</p>
+            </div>
+
+            <!-- Tabs to toggle Login vs Register vs Direct Bypass -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register Tenant</button>
+                <button class="auth-tab" data-tab="bypass">Direct Bypass</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" class="auth-form active">
+                <div class="input-group">
+                    <label for="login-email">Admin Email</label>
+                    <input type="email" id="login-email" required placeholder="admin@company.com" value="admin@test.com">
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" value="Password123!">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Sign In</span>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="form-register" class="auth-form">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="reg-company">Company Name</label>
+                        <input type="text" id="reg-company" required placeholder="e.g. Acme Corp">
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-slug">Tenant Slug (Identifier)</label>
+                        <input type="text" id="reg-slug" required placeholder="e.g. acme" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'')">
+                        <small style="color:#aaa;font-size:0.75rem;margin-top:4px;display:block;">Lowercase letters, numbers and hyphens only (e.g. my-company)</small>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="reg-name">Admin Full Name</label>
+                    <input type="text" id="reg-name" required placeholder="John Doe">
+                </div>
+                <div class="input-group">
+                    <label for="reg-email">Admin Email</label>
+                    <input type="email" id="reg-email" required placeholder="admin@company.com">
+                </div>
+                <div class="input-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-success btn-block">
+                    <span>Create Tenant Workspace</span>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Direct Bypass Form -->
+            <form id="form-bypass" class="auth-form">
+                <p class="bypass-notice">Already seeded synthetic data? Enter your existing Tenant ID to bypass login and use the platform immediately.</p>
+                <div class="input-group">
+                    <label for="bypass-tenant-id">Tenant UUID</label>
+                    <input type="text" id="bypass-tenant-id" placeholder="e.g. d3b07384-d113-4956-b63e-5efd59d1a812">
+                </div>
+                <button type="submit" class="btn btn-warning btn-block">
+                    <span>Access Workspace</span>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                    </svg>
+                </button>
+            </form>
+
+            <div id="auth-status" class="auth-status-msg"></div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Dashboard -->
+    <div id="app-workspace" class="app-layout hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <svg class="brain-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                        <path d="M12 6v12M8 10h8M9 14h6"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h2>NexaMind</h2>
+                    <span class="badge badge-primary">v1.0.0</span>
+                </div>
+            </div>
+
+            <div class="tenant-profile card">
+                <div class="tenant-details">
+                    <span class="tenant-label">ACTIVE WORKSPACE</span>
+                    <h3 id="display-tenant-name">Loading...</h3>
+                    <code id="display-tenant-id" title="Click to copy">Tenant ID</code>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-view="chat">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Chat Hub</span>
+                </button>
+                <button class="nav-item" data-view="rag">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>RAG Document Center</span>
+                </button>
+                <button class="nav-item" data-view="agents">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span>Agents Registry</span>
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>System Settings</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn btn-outline btn-block">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Panel -->
+        <main class="main-content">
+            <!-- View: Dashboard -->
+            <section id="view-dashboard" class="content-view active">
+                <div class="view-header">
+                    <h1>Enterprise Command Center</h1>
+                    <p class="subtitle">Overview of your multi-agent corporate analytics platform</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stats-row">
+                        <div class="stat-card glass-panel">
+                            <div class="stat-header">
+                                <h3>Total Departmental Agents</h3>
+                                <svg class="icon text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                            <div class="stat-value">20</div>
+                            <div class="stat-desc">4 Agents per module</div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-header">
+                                <h3>Platform Services Status</h3>
+                                <div class="pulse-indicator online" id="services-health-dot"></div>
+                            </div>
+                            <div class="stat-value" id="services-health-text">Online</div>
+                            <div class="stat-desc" id="services-health-desc">All microservices responding</div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-header">
+                                <h3>Active Module</h3>
+                                <svg class="icon text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon></svg>
+                            </div>
+                            <div class="stat-value" id="dashboard-active-module">All-Router</div>
+                            <div class="stat-desc">Orchestrator auto-routing active</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-access-section">
+                        <h2>Quick Inquiries by Department</h2>
+                        <div class="quick-cards-grid">
+                            <div class="quick-card finance-theme clickable-card" data-module="finance" data-prompt="what are our biggest expenses and where can we save money?">
+                                <div class="quick-card-icon">💵</div>
+                                <h3>Finance</h3>
+                                <p>"what are our biggest expenses and where can we save money?"</p>
+                                <span class="action-hint">Ask Advisor →</span>
+                            </div>
+                            <div class="quick-card hr-theme clickable-card" data-module="hr" data-prompt="which employees are at risk of leaving?">
+                                <div class="quick-card-icon">👥</div>
+                                <h3>Human Resources</h3>
+                                <p>"which employees are at risk of leaving?"</p>
+                                <span class="action-hint">Ask Retention Guard →</span>
+                            </div>
+                            <div class="quick-card operations-theme clickable-card" data-module="operations" data-prompt="summarize our supply chain status and list potential bottlenecks">
+                                <div class="quick-card-icon">⚙️</div>
+                                <h3>Operations</h3>
+                                <p>"summarize our supply chain status and list potential bottlenecks"</p>
+                                <span class="action-hint">Ask Logistics Coord. →</span>
+                            </div>
+                            <div class="quick-card sales-theme clickable-card" data-module="sales" data-prompt="forecast our revenue for next quarter">
+                                <div class="quick-card-icon">📈</div>
+                                <h3>Sales</h3>
+                                <p>"forecast our revenue for next quarter"</p>
+                                <span class="action-hint">Ask Revenue Forecaster →</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Setup instructions reminder panel -->
+                    <div class="info-alert glass-panel">
+                        <div class="info-alert-header">
+                            <svg class="icon text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <h3>Seeding Data & Prompt Template setup</h3>
+                        </div>
+                        <p>To populate your tenant workspace database with transactions, employees, sales deals, support tickets, and system prompts, make sure to execute the seed scripts on the terminal:</p>
+                        <pre><code>python3 scripts/seed_synthetic_data.py --tenant-id <span class="text-warning font-weight-bold" id="seed-hint-id">your-tenant-id</span>
+python3 scripts/seed_prompts.py --tenant-id <span class="text-warning font-weight-bold" id="seed-hint-id-2">your-tenant-id</span></code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: Chat Workspace -->
+            <section id="view-chat" class="content-view">
+                <div class="chat-workspace">
+                    <!-- Module & Agent Sidebar Selector -->
+                    <div class="chat-sidebar glass-panel">
+                        <h3>Domain Modules</h3>
+                        <div class="module-list">
+                            <button class="module-selector active" data-module="all">
+                                <span class="module-indicator all"></span>
+                                <span>General / Auto-Route</span>
+                            </button>
+                            <button class="module-selector" data-module="finance">
+                                <span class="module-indicator finance"></span>
+                                <span>Finance</span>
+                            </button>
+                            <button class="module-selector" data-module="hr">
+                                <span class="module-indicator hr"></span>
+                                <span>Human Resources</span>
+                            </button>
+                            <button class="module-selector" data-module="operations">
+                                <span class="module-indicator operations"></span>
+                                <span>Operations</span>
+                            </button>
+                            <button class="module-selector" data-module="sales">
+                                <span class="module-indicator sales"></span>
+                                <span>Sales Module</span>
+                            </button>
+                            <button class="module-selector" data-module="support">
+                                <span class="module-indicator support"></span>
+                                <span>Support Desk</span>
+                            </button>
+                        </div>
+
+                        <div class="agent-override-section">
+                            <h3>Force Specific Agent</h3>
+                            <select id="chat-agent-override" class="input-select">
+                                <option value="">Auto-Route (Recommended)</option>
+                            </select>
+                            <p class="override-tip">By default, our Orchestrator Router uses keywords to forward your question to the optimal agent. Select an agent above to bypass routing.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Container -->
+                    <div class="chat-container glass-panel">
+                        <!-- Header -->
+                        <div class="chat-header">
+                            <div class="chat-title-area">
+                                <h2 id="chat-active-title">General Orchestrator</h2>
+                                <p id="chat-active-desc">Ask anything - questions will be automatically routed to the correct department agent.</p>
+                            </div>
+                            <button id="btn-clear-chat" class="btn btn-sm btn-outline">Clear Chat</button>
+                        </div>
+
+                        <!-- Chat Messages Screen -->
+                        <div class="chat-messages" id="chat-messages-container">
+                            <div class="message system-msg">
+                                <div class="msg-bubble">
+                                    Welcome to NexaMind. Ask your business query. The Router Agent will analyze your prompt, select the corresponding specialized department agent, perform database operations, and return the analyzed recommendations.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic suggestions bar -->
+                        <div class="chat-suggestions" id="chat-suggestions-chips">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Chat Typing Indicator -->
+                        <div class="typing-indicator hidden" id="chat-typing-indicator">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <span id="typing-indicator-text">Orchestrator routing message...</span>
+                        </div>
+
+                        <!-- Input area -->
+                        <div class="chat-input-area">
+                            <textarea id="chat-input" placeholder="Type a message (e.g. 'what are our budget savings for this year?')" rows="1"></textarea>
+                            <button id="btn-send-message" class="btn btn-primary btn-icon-only">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: RAG Document Center -->
+            <section id="view-rag" class="content-view">
+                <div class="view-header">
+                    <h1>RAG Document Ingestion</h1>
+                    <p class="subtitle">Upload knowledge documents to ChromaDB and test semantic retrieval</p>
+                </div>
+
+                <div class="rag-layout">
+                    <!-- Upload Area -->
+                    <div class="rag-upload-panel glass-panel">
+                        <h2>1. Upload Business Documents</h2>
+                        <p class="section-desc">Uploaded files will be loaded, split into chunks, embedded, and indexed into the ChromaDB vector database under your tenant collection.</p>
+                        
+                        <div class="drop-zone" id="rag-drop-zone">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p>Drag and drop your file here, or <span class="text-primary font-weight-bold">browse files</span></p>
+                            <span class="file-limits">Supported formats: .txt, .pdf, .docx, .json</span>
+                            <input type="file" id="rag-file-input" class="hidden">
+                        </div>
+
+                        <div class="input-group" style="margin-top: 15px;">
+                            <label for="rag-collection">Destination Collection</label>
+                            <input type="text" id="rag-collection" value="default" placeholder="e.g. finance, hr, policies">
+                        </div>
+
+                        <div id="upload-progress-container" class="upload-progress-container hidden">
+                            <div class="progress-details">
+                                <span id="upload-filename">document.pdf</span>
+                                <span id="upload-status-badge" class="badge">Uploading...</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="upload-progress-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="upload-history mt-20">
+                            <h3>Indexed Uploads</h3>
+                            <div class="history-list" id="upload-history-list">
+                                <div class="no-data">No documents uploaded in this session yet.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search / Query Area -->
+                    <div class="rag-search-panel glass-panel">
+                        <h2>2. Semantic Retrieval Search Test</h2>
+                        <p class="section-desc">Test document embeddings and vector store search. Run search queries to fetch relevant chunks and match scores directly.</p>
+
+                        <div class="search-form">
+                            <div class="input-group">
+                                <label for="rag-query-input">Search Query</label>
+                                <div class="search-input-wrapper">
+                                    <input type="text" id="rag-query-input" placeholder="Type query to retrieve matching document sections...">
+                                    <button id="btn-search-rag" class="btn btn-primary">Search</button>
+                                </div>
+                            </div>
+                            <div class="search-options">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="rag-hybrid-search" checked>
+                                    <label for="rag-hybrid-search">Use Hybrid Rerank</label>
+                                </div>
+                                <div class="input-group compact">
+                                    <label for="rag-results-count">Results</label>
+                                    <input type="number" id="rag-results-count" value="3" min="1" max="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="search-results-container">
+                            <h3>Vector Match Results</h3>
+                            <div class="search-results" id="search-results-list">
+                                <div class="no-data">Enter a query above to see matching document segments from ChromaDB.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: Agents Registry -->
+            <section id="view-agents" class="content-view">
+                <div class="view-header">
+                    <h1>Specialized Agent Registry</h1>
+                    <p class="subtitle">Complete catalog of the 20 AI agents working on your nexamind platform</p>
+                </div>
+
+                <div class="registry-filter-bar">
+                    <button class="registry-filter active" data-filter="all">All Modules</button>
+                    <button class="registry-filter" data-filter="finance">Finance</button>
+                    <button class="registry-filter" data-filter="hr">HR</button>
+                    <button class="registry-filter" data-filter="operations">Operations</button>
+                    <button class="registry-filter" data-filter="sales">Sales</button>
+                    <button class="registry-filter" data-filter="support">Support</button>
+                </div>
+
+                <div class="agents-grid" id="agents-registry-grid">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+            </section>
+
+            <!-- View: Settings -->
+            <section id="view-settings" class="content-view">
+                <div class="view-header">
+                    <h1>System Configurations</h1>
+                    <p class="subtitle">Manage server connection URLs and API endpoints</p>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="card glass-panel">
+                        <h2>Microservice Endpoint Configurations</h2>
+                        <p class="card-desc">Configure target endpoints for nexamind backend microservices running on your network. The defaults connect to standard Docker port mappings.</p>
+                        
+                        <div class="input-group">
+                            <label for="setting-orchestrator-url">Agent Orchestrator Host</label>
+                            <input type="text" id="setting-orchestrator-url" placeholder="http://localhost:8000">
+                            <span class="setting-hint">Main orchestrator endpoint serving chat and listing agents.</span>
+                        </div>
+                        
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="setting-auth-url">Auth Service Host</label>
+                                <input type="text" id="setting-auth-url" placeholder="http://localhost:8001">
+                            </div>
+                            <div class="input-group">
+                                <label for="setting-rag-url">RAG Service Host</label>
+                                <input type="text" id="setting-rag-url" placeholder="http://localhost:8003">
+                            </div>
+                        </div>
+
+                        <button id="btn-save-settings" class="btn btn-primary" style="margin-top: 10px;">Save Connections</button>
+                    </div>
+
+                    <div class="card glass-panel">
+                        <h2>Connection Diagnostics</h2>
+                        <p class="card-desc">Verify real-time status of backend containers.</p>
+                        <div class="diagnostics-list">
+                            <div class="diagnostic-item">
+                                <span>Agent Orchestrator (Port 8000)</span>
+                                <span class="diag-status status-unknown" id="diag-orchestrator">Checking...</span>
+                            </div>
+                            <div class="diagnostic-item">
+                                <span>Authentication Service (Port 8001)</span>
+                                <span class="diag-status status-unknown" id="diag-auth">Checking...</span>
+                            </div>
+                            <div class="diagnostic-item">
+                                <span>RAG Document Service (Port 8003)</span>
+                                <span class="diag-status status-unknown" id="diag-rag">Checking...</span>
+                            </div>
+                        </div>
+                        <button id="btn-run-diagnostics" class="btn btn-outline" style="margin-top: 15px;">Run Health Diagnostics</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js?v=3"></script>
+</body>
+</html>

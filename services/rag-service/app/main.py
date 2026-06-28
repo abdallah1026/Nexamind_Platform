@@ -1,12 +1,9 @@
-# rag service - handles document upload and semantic search
-# embeddings are done locally using sentence-transformers (no api key needed)
-# vector storage is chromadb
+
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic_settings import BaseSettings
-
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://nexamind:nexamind_secret@localhost:5432/nexamind"
@@ -15,18 +12,14 @@ class Settings(BaseSettings):
     CHROMA_PORT: int = 8000
     CHROMA_AUTH_TOKEN: str = "nexamind-chroma-token"
     LLM_GATEWAY_URL: str = "http://localhost:8002"
-    
-    # local = use sentence-transformers (default, no api key needed)
-    # openai = use openai via llm gateway (requires openai key)
+
     EMBEDDING_PROVIDER: str = "local"
 
     class Config:
         env_file = ".env"
 
-
 settings = Settings()
 
-# set env var so embedder.py picks it up
 import os
 os.environ["EMBEDDING_PROVIDER"] = settings.EMBEDDING_PROVIDER
 
@@ -38,12 +31,10 @@ vector_store = VectorStore(
     settings.CHROMA_AUTH_TOKEN
 )
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"RAG service starting - embedding provider: {settings.EMBEDDING_PROVIDER}")
-    
-    # pre-load the embedding model so first request isnt slow
+
     if settings.EMBEDDING_PROVIDER == "local":
         print("loading sentence-transformers model (first time may take a minute to download)...")
         try:
@@ -55,7 +46,6 @@ async def lifespan(app: FastAPI):
     
     yield
     print("RAG service shutdown")
-
 
 app = FastAPI(
     title="NexaMind RAG Service",
@@ -77,7 +67,6 @@ from .routes.search import router as search_router
 
 app.include_router(docs_router)
 app.include_router(search_router)
-
 
 @app.get("/health")
 async def health():

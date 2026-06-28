@@ -1,0 +1,85 @@
+========================================================================
+TESLA, INC. ENTERPRISE OPERATIONS MANUAL & POLICY HANDBOOK (Q2 2026)
+========================================================================
+
+------------------------------------------------------------------------
+SECTION 1: HR ATTRITION AND RETENTION PLAYBOOK
+------------------------------------------------------------------------
+Tesla is committed to retaining top talent in our engineering and manufacturing groups.
+To mitigate attrition risk, HR and Managers must use the following Retention Playbook:
+
+1. Attrition Risk Scoring and Intervention Tiers:
+   * Score 30-50 (Low Risk): Annual performance reviews and development plan checks.
+   * Score 51-70 (Medium Risk): Bi-weekly manager 1:1 check-ins, compensation review.
+   * Score 71-100 (High / Critical Risk):
+     - Skip-level meeting with Director or VP within 3 days.
+     - Urgent compensation market adjustment review.
+     - Consideration of a Retention Package including:
+       a) Spot cash bonus of up to $25,000.
+       b) Specialized Stock Grants (RSUs) representing 10% to 20% of the base salary, vesting over 2 years.
+       c) Immediate transition plan to address work-life balance or project misalignment.
+
+2. Software and Autopilot Engineering Retention Specifics:
+   - For Senior Architects or ML Specialists (e.g., in Autopilot/Optimus) at high risk, the VP of Vehicle Engineering must sign off on a fast-track promotion path.
+
+------------------------------------------------------------------------
+SECTION 2: OPERATIONS AND DEMAND SAFETY STOCK FORMULAS
+------------------------------------------------------------------------
+To prevent stockouts in vehicle parts and energy components, Operations uses standard inventory optimization formulas:
+
+1. Safety Stock (SS) Formula:
+   SS = Z * std_dev_demand * sqrt(lead_time_days)
+   Where:
+   - Z = Service Level Factor (Z-Score):
+     * Z = 1.65 for a 95% service level.
+     * Z = 2.05 for a 98% service level.
+     * Z = 2.33 for a 99% service level (default for Megapack and energy storage parts due to critical contract terms).
+   - std_dev_demand = Standard deviation of daily demand.
+   - lead_time_days = Time in days between order placement and receipt.
+
+2. Reorder Point (ROP) Formula:
+   ROP = (Average Daily Demand * Lead Time Days) + Safety Stock
+
+------------------------------------------------------------------------
+SECTION 3: SUPPORT DESK SLA MATRIX AND VIP ESCALATION TRIGGERS
+------------------------------------------------------------------------
+Support tickets are handled based on impact, safety level, and customer tiers:
+
+1. SLA Priority Table:
+   - Priority P1 (Safety/Production Down): First response within 1 hour. Resolution within 24 hours.
+   - Priority P2 (Degraded Performance / Minor Issue): First response within 4 hours. Resolution within 3 days.
+   - Priority P3 (General Questions / Warranty Adjustments): First response within 24 hours. Resolution within 7 days.
+   - Priority P4 (Enhancement Requests): First response within 72 hours. Resolution within 30 days.
+
+2. VIP/Safety Escalation Triggers:
+   - Any ticket mentioning "Autopilot phantom braking", "uncontrolled acceleration", or "steering lockup" MUST be immediately classified as a P1 ticket.
+   - P1 tickets must be auto-assigned to the Autopilot Engineering Lead on call and escalated to the VP of Vehicle Engineering within 2 hours.
+   - First responses for P1 safety tickets must include a standard safety warning: "Please keep hands on the wheel and be ready to take manual control at all times."
+
+------------------------------------------------------------------------
+SECTION 4: SALES CHURN PREVENTION & DEALS STRATEGY
+------------------------------------------------------------------------
+1. Customer Churn Mitigation Playbook:
+   - If a commercial account (e.g. Hertz Rental, Enterprise) has a churn risk score exceeding 60:
+     - Schedule an Executive Sponsor meeting within 5 business days.
+     - Offer a custom Supercharger Network discount of 15% for fleet charging.
+     - Offer multi-year pricing renewal discounts of 10% to 12% on future Model Y and Model 3 orders.
+     - Assign a dedicated Technical Account Manager (TAM) to resolve vehicle uptime issues.
+
+2. Megapack Commercial Deals Playbook:
+   - For utility-scale deals (e.g., ERCOT Megapack Deployment), offer financing terms through Tesla Energy Finance (TEF) up to 15 years.
+   - Standard discount margins on Megapacks are capped at 5% unless approved by the VP of Tesla Energy.
+
+------------------------------------------------------------------------
+SECTION 5: FINANCE BUDGET OPTIMIZATION & REIMBURSEMENT LIMITS
+------------------------------------------------------------------------
+1. Travel and Expense (T&E) Policy:
+   - Hotel room rates are capped at $250 per night for standard business travel.
+   - Business meals are capped at $75 per person (inclusive of tax and tip).
+   - Flight bookings must be Coach class unless flight duration exceeds 8 hours.
+
+2. Capital Expenditure (CapEx) Approval Limits:
+   - Operations CapEx under $100,000: Approved by Department Manager.
+   - CapEx $100,000 to $1,000,000: Approved by VP of Vehicle Engineering.
+   - CapEx exceeding $1,000,000: Requires direct approval and sign-off by the CFO (Vaibhav Taneja) and CEO (Elon Musk). Any unauthorized payment over $1,000,000 is flagged as a high-severity internal audit anomaly.
+========================================================================

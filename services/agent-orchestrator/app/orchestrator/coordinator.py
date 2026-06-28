@@ -1,14 +1,8 @@
-# coordinator.py
-# this is the main routing logic - figures out which agent to call
-# took me a while to figure out the best way to do this
-# i tried using a classifier model first but keyword matching works fine for now
+
 
 from typing import Dict, Any, Optional, List
 import re
 
-
-# keywords for each module - used to figure out what the user is asking about
-# added more keywords after testing with different queries
 MODULE_KEYWORDS = {
     "finance": [
         "revenue", "expense", "budget", "cost", "forecast", "cash", "profit", 
@@ -36,8 +30,6 @@ MODULE_KEYWORDS = {
     ],
 }
 
-# map from task keywords to specific agent
-# TODO: maybe use ML for this in future version
 AGENT_TASK_MAP = {
     "finance": {
         "forecast": "forecaster_agent",
@@ -108,7 +100,6 @@ AGENT_TASK_MAP = {
     },
 }
 
-
 def detect_module(text: str) -> Optional[str]:
     """figure out which module the user is asking about"""
     text_lower = text.lower()
@@ -117,13 +108,11 @@ def detect_module(text: str) -> Optional[str]:
     for module, keywords in MODULE_KEYWORDS.items():
         score = sum(1 for kw in keywords if kw in text_lower)
         scores[module] = score
-    
-    # if nothing matches return None
+
     if max(scores.values()) == 0:
         return None
     
     return max(scores, key=scores.get)
-
 
 def detect_agent(text: str, module: str) -> str:
     """pick the right agent within a module"""
@@ -135,14 +124,12 @@ def detect_agent(text: str, module: str) -> str:
             continue
         if keyword in text_lower:
             return agent_name
-    
-    # fallback to default agent for the module
-    return task_map.get("default", "reporter_agent")
 
+    return task_map.get("default", "reporter_agent")
 
 def get_agent_class(agent_name: str):
     """returns module path and class name for dynamic import"""
-    # had to do dynamic imports to avoid circular import issues
+    
     agent_map = {
         "forecaster_agent": ("app.agents.finance.forecaster_agent", "ForecasterAgent"),
         "detector_agent": ("app.agents.finance.detector_agent", "DetectorAgent"),
@@ -166,7 +153,6 @@ def get_agent_class(agent_name: str):
         "quality_analyst_agent": ("app.agents.support.quality_analyst_agent", "QualityAnalystAgent"),
     }
     return agent_map.get(agent_name)
-
 
 class AgentCoordinator:
     """
@@ -210,16 +196,15 @@ class AgentCoordinator:
         force_agent: str = None, 
         force_module: str = None
     ) -> Dict[str, Any]:
-        
-        # if agent is specified directly, just use that
+
         if force_agent:
             agent_name = force_agent
         else:
-            # otherwise figure it out from the text
+            
             module = force_module or detect_module(user_input)
             
             if not module:
-                # couldnt figure out the module
+                
                 return {
                     "response": "Sorry I'm not sure what you're asking about. Please mention if its related to Finance, HR, Operations, Sales or Support.",
                     "agent": "coordinator",
@@ -227,9 +212,7 @@ class AgentCoordinator:
                 }
             
             agent_name = detect_agent(user_input, module)
-        
-        # print(f"routing to: {agent_name}")  # debug - uncomment if needed
-        
+
         agent = self._load_agent(agent_name)
         result = await agent.run(user_input, context)
         return result

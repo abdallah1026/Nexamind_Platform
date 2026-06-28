@@ -1,6 +1,7 @@
 import io
 import json
 from typing import Any, Dict, List, Optional
+import csv
 
 class DocumentTool:
     name = "document_tool"
@@ -22,7 +23,7 @@ class DocumentTool:
         return await fn(**kwargs)
 
     async def _parse_csv(self, content: str, **kwargs) -> Dict[str, Any]:
-        import csv
+        
         reader = csv.DictReader(io.StringIO(content))
         rows = list(reader)
         return {"rows": rows, "columns": reader.fieldnames or [], "count": len(rows)}

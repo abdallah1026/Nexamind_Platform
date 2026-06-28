@@ -1,8 +1,4 @@
-# calculation tool - does math stuff for agents
-# used by finance, operations, sales agents mostly
-# 
-# NOTE: i know scipy has better statistical functions but 
-# wanted to implement manually to understand the math better
+
 
 import math
 import statistics
@@ -18,8 +14,8 @@ class CalculationTool:
 
     async def execute(self, operation: str, data: Any, **kwargs) -> Dict[str, Any]:
         
-        # map operation names to functions
-        # TODO: add more operations if needed
+        
+        
         ops = {
             "mean": lambda d: statistics.mean(d),
             "median": lambda d: statistics.median(d),
@@ -45,20 +41,18 @@ class CalculationTool:
             result = ops[operation](data)
             return {"result": result, "operation": operation}
         except Exception as e:
-            # sometimes data is empty or wrong type
-            print(f"calc error in {operation}: {e}")  # for debugging
+            
+            print(f"calc error in {operation}: {e}")  
             return {"error": str(e)}
 
     def _percentile(self, data: List[float], p: float) -> float:
-        # manual percentile calculation
-        # learned this from stats class
         sorted_data = sorted(data)
         index = (p / 100) * (len(sorted_data) - 1)
         lower = int(index)
         upper = math.ceil(index)
         if lower == upper:
             return sorted_data[lower]
-        # linear interpolation
+    
         return sorted_data[lower] * (upper - index) + sorted_data[upper] * (index - lower)
 
     def _moving_avg(self, data: List[float], window: int) -> List[float]:
@@ -70,7 +64,7 @@ class CalculationTool:
         return result
 
     def _growth_rate(self, data: List[float]) -> List[float]:
-        # calculate period over period growth
+        
         rates = []
         for i in range(1, len(data)):
             if data[i-1] != 0:
@@ -81,21 +75,20 @@ class CalculationTool:
         return rates
 
     def _cagr(self, start: float, end: float, years: int) -> float:
-        # compound annual growth rate
-        # formula: (end/start)^(1/n) - 1
+        
         if start <= 0 or years <= 0:
             return 0
         return round(((end / start) ** (1 / years) - 1) * 100, 2)
 
     def _npv(self, rate: float, cash_flows: List[float]) -> float:
-        # net present value
+        
         total = 0
         for i, cf in enumerate(cash_flows):
             total += cf / (1 + rate) ** i
         return round(total, 2)
 
     def _correlation(self, x: List[float], y: List[float]) -> float:
-        # pearson correlation
+        
         if len(x) != len(y) or len(x) < 2:
             return 0
         n = len(x)

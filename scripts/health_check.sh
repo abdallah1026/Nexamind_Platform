@@ -10,9 +10,9 @@ check_service() {
   local status
   status=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
   if [ "$status" = "200" ]; then
-    echo "✅ $name: HEALTHY ($url)"
+    echo " $name: HEALTHY ($url)"
   else
-    echo "❌ $name: UNHEALTHY [$status] ($url)"
+    echo " $name: UNHEALTHY [$status] ($url)"
   fi
 }
 
@@ -24,5 +24,5 @@ check_service "ChromaDB"            "http://localhost:8010/api/v1/heartbeat"
 
 echo ""
 echo "=== Database & Redis ==="
-pg_isready -h localhost -p 5432 -U nexamind && echo "✅ PostgreSQL: HEALTHY" || echo "❌ PostgreSQL: UNHEALTHY"
-redis-cli -p 6379 ping > /dev/null 2>&1 && echo "✅ Redis: HEALTHY" || echo "❌ Redis: UNHEALTHY"
+pg_isready -h localhost -p 5432 -U nexamind && echo " PostgreSQL: HEALTHY" || echo " PostgreSQL: UNHEALTHY"
+redis-cli -p 6379 ping > /dev/null 2>&1 && echo " Redis: HEALTHY" || echo " Redis: UNHEALTHY"

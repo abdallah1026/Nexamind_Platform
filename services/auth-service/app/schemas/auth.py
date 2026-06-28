@@ -58,5 +58,5 @@ class APIKeyResponse(BaseModel):
     scopes: List[str]
     is_active: bool
     created_at: datetime
-    full_key: Optional[str] = None  # Only returned on creation
+    full_key: Optional[str] = None  
     model_config = {"from_attributes": True}

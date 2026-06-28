@@ -45,17 +45,15 @@ async def get_current_user(
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def register_tenant(data: TenantCreate, db: AsyncSession = Depends(get_db)):
     """Register a new tenant with an admin user"""
-    # Check slug uniqueness
+    
     existing = await db.execute(select(Tenant).where(Tenant.slug == data.slug))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Tenant slug already exists")
-    
-    # Create tenant
+
     tenant = Tenant(name=data.name, slug=data.slug)
     db.add(tenant)
     await db.flush()
-    
-    # Create admin role
+
     role = Role(
         tenant_id=tenant.id,
         name="admin",
@@ -64,8 +62,7 @@ async def register_tenant(data: TenantCreate, db: AsyncSession = Depends(get_db)
     )
     db.add(role)
     await db.flush()
-    
-    # Create admin user
+
     user = User(
         tenant_id=tenant.id,
         role_id=role.id,
@@ -146,7 +143,7 @@ async def create_api_key(
     await db.refresh(api_key)
     
     response = APIKeyResponse.model_validate(api_key)
-    response.full_key = full_key  # Only shown once
+    response.full_key = full_key  
     return response
 
 def _create_tokens(user: User) -> dict:

@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # install python deps
-# torch takes a while to install
-RUN pip install --no-cache-dir -r requirements.txt
+# pre-install CPU-only PyTorch to avoid heavy CUDA libraries download
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY app/ ./app/
 

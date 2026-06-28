@@ -37,7 +37,7 @@ class WebhookTool:
             except Exception as e:
                 if attempt == max_retries - 1:
                     return {"status": "failed", "error": str(e), "attempts": max_retries}
-            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+            await asyncio.sleep(2 ** attempt)  
         
         return {"status": "failed", "error": "Max retries exceeded"}
 

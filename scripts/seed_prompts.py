@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """Seed knowledge base with initial prompt documentation"""
 import asyncio
 import asyncpg

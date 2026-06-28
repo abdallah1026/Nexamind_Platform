@@ -1,13 +1,10 @@
-# anomaly detection agent
-# this one was hard to figure out, spent alot of time on the statistical part
-# reference: https://towardsdatascience.com/anomaly-detection-with-z-score
+
 
 import os
 import joblib
 import pandas as pd
 from typing import Any, Dict
 from ..base_agent import BaseAgent
-
 
 class DetectorAgent(BaseAgent):
     name = "detector_agent"
@@ -16,9 +13,9 @@ class DetectorAgent(BaseAgent):
     tools = ["sql_tool", "calculation_tool", "rag_tool", "webhook_tool"]
 
     def _get_model_path(self) -> str:
-        # models are saved by the training script in this directory
+        
         base_dir = os.path.dirname(__file__)
-        # path: .../app/agents/finance/../../models/anomaly_models/detector_<tenant_id>.joblib
+        
         return os.path.abspath(os.path.join(base_dir, "..", "..", "models", "anomaly_models", f"detector_{self.tenant_id}.joblib"))
 
     def get_system_prompt(self) -> str:
@@ -52,8 +49,7 @@ be specific, dont say "this might be suspicious" actually explain why"""
             {"tenant_id": self.tenant_id}
         )
         txns = result.get("rows", [])
-        
-        # calculate standard deviation to find outliers (legacy/fallback method)
+
         amounts = [float(r["amount"]) for r in txns if r.get("amount")]
         
         stdev_result = {"result": 0}
@@ -62,7 +58,6 @@ be specific, dont say "this might be suspicious" actually explain why"""
             stdev_result = await calc.execute("stdev", amounts)
             mean_result = await calc.execute("mean", amounts)
 
-        # ML based detection
         ml_anomalies = []
         model_loaded = False
         model_path = self._get_model_path()
@@ -72,13 +67,12 @@ be specific, dont say "this might be suspicious" actually explain why"""
                 model = joblib.load(model_path)
                 df = pd.DataFrame(txns)
                 if not df.empty:
-                    # prepare features matching the training script
+                    
                     df['amount'] = df['amount'].astype(float)
                     df['transaction_date'] = pd.to_datetime(df['transaction_date'])
                     df['hour'] = df['transaction_date'].dt.hour
                     df['dow'] = df['transaction_date'].dt.dayofweek
-                    
-                    # predict anomalies (-1 is anomaly)
+
                     preds = model.predict(df[["amount", "category", "counterparty", "hour", "dow"]])
                     
                     for i, pred in enumerate(preds):

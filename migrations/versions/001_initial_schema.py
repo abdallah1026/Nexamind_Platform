@@ -14,8 +14,7 @@ branch_labels = None
 depends_on = None
 
 def upgrade() -> None:
-    # Core tables are created by init.sql in Docker
-    # This migration handles incremental updates
+
     pass
 
 def downgrade() -> None:

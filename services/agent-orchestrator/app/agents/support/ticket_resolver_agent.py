@@ -33,8 +33,7 @@ Response quality standards:
     async def process(self, user_input: str, context: Dict = None) -> Dict[str, Any]:
         sql = self.get_tool("sql_tool")
         rag = self.get_tool("rag_tool")
-        
-        # Search KB for relevant articles
+
         kb_results = await rag.execute(user_input, collection="knowledge_base", n_results=5)
         
         recent_tickets = await sql.execute(

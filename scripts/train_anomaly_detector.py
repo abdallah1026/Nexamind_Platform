@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
-"""
-Train Anomaly Detector for NexaMind AI Platform
-Usage: python train_anomaly_detector.py --tenant-id <uuid> --db-url <url>
-"""
+
 import asyncio
 import argparse
 import sys
@@ -16,13 +12,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 import joblib
 
-try:
-    import asyncpg
-except ImportError:
-    print("Install asyncpg: pip install asyncpg")
-    sys.exit(1)
+import asyncpg
 
-# Default model path
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "services", "agent-orchestrator", "app", "models", "anomaly_models")
 
 async def fetch_data(conn, tenant_id: str):
@@ -42,27 +33,22 @@ async def fetch_data(conn, tenant_id: str):
 
 def train_model(df):
     print(f"Training IsolationForest on {len(df)} transactions...")
-    
-    # Define features
+
     numeric_features = ["amount", "hour", "dow"]
     categorical_features = ["category", "counterparty"]
-    
-    # Preprocessing pipeline
+
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), numeric_features),
             ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features)
         ]
     )
-    
-    # Isolation Forest Model
+
     model = Pipeline(steps=[
         ("preprocessor", preprocessor),
         ("clf", IsolationForest(contamination=0.05, random_state=42))
     ])
-    
-    # Fit model
-    # IsolationForest.fit expects data where -1 is anomaly, 1 is normal
+
     model.fit(df)
     
     return model

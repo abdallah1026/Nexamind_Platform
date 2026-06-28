@@ -1,11 +1,7 @@
-# churn guardian - identifies customers likely to cancel/leave
-#
-# similar idea to employee attrition but for customers
-# key signals: product usage, support tickets, payment issues, NPS scores
+
 
 from typing import Any, Dict
 from ..base_agent import BaseAgent
-
 
 class ChurnGuardianAgent(BaseAgent):
     name = "churn_guardian_agent"
@@ -33,7 +29,6 @@ Be specific. "Reach out to the customer" is not helpful. Say exactly what to say
     async def process(self, user_input: str, context: Dict = None) -> Dict[str, Any]:
         sql = self.get_tool("sql_tool")
 
-        # get churn risk data
         churn_data = await sql.execute(
             """SELECT 
                 customer_name, 
@@ -50,7 +45,6 @@ Be specific. "Reach out to the customer" is not helpful. Say exactly what to say
             {"tenant_id": self.tenant_id}
         )
 
-        # also grab recent feedback to understand why customers are unhappy
         feedback = await sql.execute(
             """SELECT customer_name, rating, sentiment, themes
             FROM customer_feedback

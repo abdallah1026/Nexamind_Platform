@@ -1,8 +1,3 @@
-# simple rate limiter using redis
-# limits requests per minute per tenant
-# 
-# using sliding window approach with redis keys that expire after 1 min
-
 import redis.asyncio as aioredis
 import time
 
@@ -18,16 +13,14 @@ class RateLimiter:
         check if tenant has exceeded rate limit
         returns (is_allowed, remaining_requests)
         """
-        # key based on tenant and current minute
+
         current_minute = int(time.time() // 60)
         key = f"ratelimit:{tenant_id}:{current_minute}"
         
-        # increment counter
         count = await self.redis.incr(key)
         
-        # set expiry if this is first request in this minute
         if count == 1:
-            await self.redis.expire(key, 70)  # 70 sec to be safe
+            await self.redis.expire(key, 70)  
         
         remaining = max(0, self.rpm - count)
         allowed = count <= self.rpm
